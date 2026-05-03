@@ -22,6 +22,9 @@ export class RecordsService {
     if (filters.category_id) {
       query = query.eq('category_id', filters.category_id);
     }
+    if (filters.responsible) {
+      query = query.eq('responsible', filters.responsible);
+    }
     if (filters.method) {
       query = query.eq('method', filters.method);
     }

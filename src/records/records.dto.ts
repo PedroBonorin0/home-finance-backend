@@ -60,6 +60,11 @@ export class RecordFiltersDto {
   @IsOptional()
   category_id?: string;
 
+  @ApiPropertyOptional({ description: 'Filtrar por responsável' })
+  @IsString()
+  @IsOptional()
+  responsible?: string;
+
   @ApiPropertyOptional({ example: '2024-01-01' })
   @IsDateString()
   @IsOptional()
