@@ -2,13 +2,16 @@ import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import {
   IsDateString,
   IsEnum,
+  IsInt,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsPositive,
   IsString,
   IsUUID,
+  Max,
   MaxLength,
+  Min,
 } from 'class-validator';
 
 export enum PaymentMethod {
@@ -50,6 +53,13 @@ export class CreateRecordDto {
   @IsOptional()
   @MaxLength(500)
   notes?: string;
+
+  @ApiPropertyOptional({ example: 3, description: 'Numero de parcelas (apenas para credito)' })
+  @IsInt()
+  @Min(1)
+  @Max(24)
+  @IsOptional()
+  installments?: number;
 }
 
 export class UpdateRecordDto extends PartialType(CreateRecordDto) {}
@@ -79,6 +89,11 @@ export class RecordFiltersDto {
   @IsEnum(PaymentMethod)
   @IsOptional()
   method?: PaymentMethod;
+
+  @ApiPropertyOptional({ description: 'Filtrar por grupo de parcelas' })
+  @IsUUID()
+  @IsOptional()
+  installment_group_id?: string;
 }
 
 export class RecordResponseDto {
@@ -88,6 +103,8 @@ export class RecordResponseDto {
   @ApiProperty({ enum: PaymentMethod }) method: PaymentMethod;
   @ApiProperty() date: string;
   @ApiPropertyOptional() notes?: string;
+  @ApiPropertyOptional() installment_group_id?: string;
+  @ApiPropertyOptional() installment_number?: number;
   @ApiProperty() created_at: string;
   @ApiProperty() updated_at: string;
   @ApiPropertyOptional({ description: 'Dados da categoria (quando expandido)' })

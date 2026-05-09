@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
+import { InstallmentGroupsService } from '../installment-groups/installment-groups.service';
 import {
   CreateRecordDto,
   RecordFiltersDto,
@@ -10,7 +11,10 @@ import {
 export class RecordsService {
   private readonly TABLE = 'records';
 
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly installmentGroupsService: InstallmentGroupsService,
+  ) {}
 
   async findAll(filters: RecordFiltersDto) {
     let query = this.supabase.db
@@ -34,6 +38,9 @@ export class RecordsService {
     if (filters.date_to) {
       query = query.lte('date', filters.date_to);
     }
+    if (filters.installment_group_id) {
+      query = query.eq('installment_group_id', filters.installment_group_id);
+    }
 
     const { data, error } = await query;
     if (error) throw new Error(error.message);
@@ -52,9 +59,68 @@ export class RecordsService {
   }
 
   async create(dto: CreateRecordDto) {
+    if (dto.installments && dto.installments > 1) {
+      const group = await this.installmentGroupsService.create({
+        category_id: dto.category_id,
+        responsible: dto.responsible,
+        total_value: dto.value,
+        installments: dto.installments,
+        first_date: dto.date,
+        description: dto.notes ?? undefined,
+      });
+
+      const installmentValue = Math.floor((dto.value / dto.installments) * 100) / 100;
+      const recordsToInsert = [];
+
+      for (let i = 0; i < dto.installments; i++) {
+        const baseDate = new Date(dto.date + 'T12:00:00');
+        const targetMonth = baseDate.getMonth() + i;
+        const targetYear = baseDate.getFullYear() + Math.floor(targetMonth / 12);
+        const normalizedMonth = targetMonth % 12;
+
+        const lastDayOfMonth = new Date(targetYear, normalizedMonth + 1, 0).getDate();
+        const day = Math.min(baseDate.getDate(), lastDayOfMonth);
+
+        const recordDate = new Date(targetYear, normalizedMonth, day);
+        const dateStr = recordDate.toISOString().split('T')[0];
+
+        const value = i === dto.installments - 1
+          ? Math.round((dto.value - installmentValue * (dto.installments - 1)) * 100) / 100
+          : installmentValue;
+
+        recordsToInsert.push({
+          category_id: dto.category_id,
+          responsible: dto.responsible,
+          value,
+          method: dto.method,
+          date: dateStr,
+          notes: dto.notes ? `${dto.notes} (${i + 1}/${dto.installments})` : `${i + 1}/${dto.installments}`,
+          installment_group_id: group.id,
+          installment_number: i + 1,
+        });
+      }
+
+      const { data, error } = await this.supabase.db
+        .from(this.TABLE)
+        .insert(recordsToInsert)
+        .select('*, categories(id, name, type)');
+
+      if (error) throw new Error(error.message);
+      return data;
+    }
+
     const { data, error } = await this.supabase.db
       .from(this.TABLE)
-      .insert(dto)
+      .insert({
+        category_id: dto.category_id,
+        responsible: dto.responsible,
+        value: dto.value,
+        method: dto.method,
+        date: dto.date,
+        notes: dto.notes,
+        installment_group_id: null,
+        installment_number: null,
+      })
       .select('*, categories(id, name, type)')
       .single();
 
@@ -86,6 +152,40 @@ export class RecordsService {
 
     if (error) throw new Error(error.message);
     return { message: 'Registro removido com sucesso' };
+  }
+
+  async removeByInstallmentGroup(installment_group_id: string) {
+    const { data, error } = await this.supabase.db
+      .from(this.TABLE)
+      .delete()
+      .eq('installment_group_id', installment_group_id)
+      .select('id');
+
+    if (error) throw new Error(error.message);
+    await this.installmentGroupsService.remove(installment_group_id);
+    return { message: `${data?.length ?? 0} registros removidos com sucesso` };
+  }
+
+  async updateByInstallmentGroup(installment_group_id: string, dto: UpdateRecordDto) {
+    const { data, error } = await this.supabase.db
+      .from(this.TABLE)
+      .update(dto)
+      .eq('installment_group_id', installment_group_id)
+      .select('*, categories(id, name, type)');
+
+    if (error) throw new Error(error.message);
+    return data;
+  }
+
+  async findByInstallmentGroup(installment_group_id: string) {
+    const { data, error } = await this.supabase.db
+      .from(this.TABLE)
+      .select('*, categories(id, name, type)')
+      .eq('installment_group_id', installment_group_id)
+      .order('date', { ascending: true });
+
+    if (error) throw new Error(error.message);
+    return data;
   }
 
   async getSummary(filters: RecordFiltersDto) {

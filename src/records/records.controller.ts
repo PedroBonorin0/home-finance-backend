@@ -78,8 +78,36 @@ export class RecordsController {
   @ApiOperation({ summary: 'Remover registro financeiro' })
   @ApiParam({ name: 'id', type: String })
   @ApiResponse({ status: 200, description: 'Registro removido' })
-  @ApiResponse({ status: 404, description: 'Registro não encontrado' })
+  @ApiResponse({ status: 404, description: 'Registro nao encontrado' })
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.service.remove(id);
+  }
+
+  @Delete('installment-group/:installment_group_id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Remover todos os registros de um grupo de parcelas' })
+  @ApiParam({ name: 'installment_group_id', type: String })
+  @ApiResponse({ status: 200, description: 'Registros removidos' })
+  removeByInstallmentGroup(@Param('installment_group_id', ParseUUIDPipe) installment_group_id: string) {
+    return this.service.removeByInstallmentGroup(installment_group_id);
+  }
+
+  @Patch('installment-group/:installment_group_id')
+  @ApiOperation({ summary: 'Atualizar todos os registros de um grupo de parcelas' })
+  @ApiParam({ name: 'installment_group_id', type: String })
+  @ApiResponse({ status: 200, type: [RecordResponseDto] })
+  updateByInstallmentGroup(
+    @Param('installment_group_id', ParseUUIDPipe) installment_group_id: string,
+    @Body() dto: UpdateRecordDto,
+  ) {
+    return this.service.updateByInstallmentGroup(installment_group_id, dto);
+  }
+
+  @Get('installment-group/:installment_group_id')
+  @ApiOperation({ summary: 'Buscar todos os registros de um grupo de parcelas' })
+  @ApiParam({ name: 'installment_group_id', type: String })
+  @ApiResponse({ status: 200, type: [RecordResponseDto] })
+  findByInstallmentGroup(@Param('installment_group_id', ParseUUIDPipe) installment_group_id: string) {
+    return this.service.findByInstallmentGroup(installment_group_id);
   }
 }

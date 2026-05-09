@@ -22,7 +22,7 @@ async function bootstrap() {
   // CORS para o frontend
   app.enableCors({
     origin: process.env.FRONTEND_URL ?? '*',
-    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   });
 
   // Swagger / OpenAPI
