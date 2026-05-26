@@ -94,6 +94,19 @@ export class RecordFiltersDto {
   @IsUUID()
   @IsOptional()
   installment_group_id?: string;
+
+  @ApiPropertyOptional({ example: 1, description: 'Número da página (começa em 1)' })
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  page?: number;
+
+  @ApiPropertyOptional({ example: 20, description: 'Registros por página (max 100)' })
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  @IsOptional()
+  per_page?: number;
 }
 
 export class RecordResponseDto {
@@ -109,6 +122,23 @@ export class RecordResponseDto {
   @ApiProperty() updated_at: string;
   @ApiPropertyOptional({ description: 'Dados da categoria (quando expandido)' })
   categories?: any;
+}
+
+export class PaginatedRecordsDto {
+  @ApiProperty({ type: [RecordResponseDto] })
+  data: RecordResponseDto[];
+
+  @ApiProperty({ example: 50 })
+  total: number;
+
+  @ApiProperty({ example: 1 })
+  page: number;
+
+  @ApiProperty({ example: 20 })
+  per_page: number;
+
+  @ApiProperty({ example: 3 })
+  total_pages: number;
 }
 
 export class RecordsSummaryDto {

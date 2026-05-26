@@ -5,6 +5,7 @@ import { RecordsModule } from './records/records.module';
 import { InstallmentGroupsModule } from './installment-groups/installment-groups.module';
 import { PercentagesModule } from './percentages/percentages.module';
 import { SupabaseModule } from './supabase/supabase.module';
+import { CsvImportModule } from './csv-import/csv-import.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { SupabaseModule } from './supabase/supabase.module';
     RecordsModule,
     InstallmentGroupsModule,
     PercentagesModule,
+    CsvImportModule,
   ],
 })
 export class AppModule {}

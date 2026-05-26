@@ -19,6 +19,7 @@ import {
 } from '@nestjs/swagger';
 import {
   CreateRecordDto,
+  PaginatedRecordsDto,
   RecordFiltersDto,
   RecordResponseDto,
   RecordsSummaryDto,
@@ -33,7 +34,7 @@ export class RecordsController {
 
   @Get()
   @ApiOperation({ summary: 'Listar registros com filtros opcionais' })
-  @ApiResponse({ status: 200, type: [RecordResponseDto] })
+  @ApiResponse({ status: 200, type: PaginatedRecordsDto })
   findAll(@Query() filters: RecordFiltersDto) {
     return this.service.findAll(filters);
   }

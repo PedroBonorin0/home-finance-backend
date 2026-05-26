@@ -17,11 +17,17 @@ export class RecordsService {
   ) {}
 
   async findAll(filters: RecordFiltersDto) {
+    const page = filters.page ?? 1;
+    const per_page = filters.per_page ?? 20;
+    const start = (page - 1) * per_page;
+    const end = start + per_page - 1;
+
     let query = this.supabase.db
       .from(this.TABLE)
-      .select('*, categories(id, name, type)')
+      .select('*, categories(id, name, type)', { count: 'exact' })
       .order('date', { ascending: false })
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .range(start, end);
 
     if (filters.category_id) {
       query = query.eq('category_id', filters.category_id);
@@ -42,9 +48,16 @@ export class RecordsService {
       query = query.eq('installment_group_id', filters.installment_group_id);
     }
 
-    const { data, error } = await query;
+    const { data, error, count } = await query;
     if (error) throw new Error(error.message);
-    return data;
+
+    return {
+      data,
+      total: count ?? 0,
+      page,
+      per_page,
+      total_pages: Math.ceil((count ?? 0) / per_page),
+    };
   }
 
   async findOne(id: string) {
