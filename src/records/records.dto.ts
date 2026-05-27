@@ -66,9 +66,8 @@ export class UpdateRecordDto extends PartialType(CreateRecordDto) {}
 
 export class RecordFiltersDto {
   @ApiPropertyOptional({ description: 'Filtrar por categoria' })
-  @IsUUID()
   @IsOptional()
-  category_id?: string;
+  category_id?: string | null;
 
   @ApiPropertyOptional({ description: 'Filtrar por responsável' })
   @IsString()

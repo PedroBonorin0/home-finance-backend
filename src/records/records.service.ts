@@ -29,8 +29,12 @@ export class RecordsService {
       .order('created_at', { ascending: false })
       .range(start, end);
 
-    if (filters.category_id) {
-      query = query.eq('category_id', filters.category_id);
+    if (filters.category_id !== undefined) {
+      if (filters.category_id === null || filters.category_id === 'null') {
+        query = query.is('category_id', null);
+      } else {
+        query = query.eq('category_id', filters.category_id);
+      }
     }
     if (filters.responsible) {
       query = query.eq('responsible', filters.responsible);
@@ -208,7 +212,13 @@ export class RecordsService {
 
     if (filters.date_from) query = query.gte('date', filters.date_from);
     if (filters.date_to) query = query.lte('date', filters.date_to);
-    if (filters.category_id) query = query.eq('category_id', filters.category_id);
+    if (filters.category_id !== undefined) {
+      if (filters.category_id === null || filters.category_id === 'null') {
+        query = query.is('category_id', null);
+      } else {
+        query = query.eq('category_id', filters.category_id);
+      }
+    }
 
     const { data, error } = await query;
     if (error) throw new Error(error.message);
