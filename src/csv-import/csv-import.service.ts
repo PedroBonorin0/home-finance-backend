@@ -69,9 +69,7 @@ export class CsvImportService {
           method: PaymentMethod.CREDIT,
           date: row.date,
           notes: title || null,
-          category_id: null,
-          installment_group_id: null,
-          installment_number: null,
+          subcategory_id: null,
         })
         .select()
         .single();
@@ -112,9 +110,7 @@ export class CsvImportService {
           method: PaymentMethod.PIX,
           date: this.parseBrazilianDate(row.Data),
           notes: descricao || null,
-          category_id: null,
-          installment_group_id: null,
-          installment_number: null,
+          subcategory_id: null,
         })
         .select()
         .single();

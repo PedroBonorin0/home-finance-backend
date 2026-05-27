@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { CategoriesModule } from './categories/categories.module';
 import { RecordsModule } from './records/records.module';
-import { InstallmentGroupsModule } from './installment-groups/installment-groups.module';
 import { PercentagesModule } from './percentages/percentages.module';
+import { SubcategoriesModule } from './subcategories/subcategories.module';
 import { SupabaseModule } from './supabase/supabase.module';
 import { CsvImportModule } from './csv-import/csv-import.module';
 
@@ -13,8 +13,8 @@ import { CsvImportModule } from './csv-import/csv-import.module';
     SupabaseModule,
     CategoriesModule,
     RecordsModule,
-    InstallmentGroupsModule,
     PercentagesModule,
+    SubcategoriesModule,
     CsvImportModule,
   ],
 })

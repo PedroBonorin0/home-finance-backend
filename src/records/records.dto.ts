@@ -26,10 +26,10 @@ export enum People {
 }
 
 export class CreateRecordDto {
-  @ApiProperty({ example: 'uuid-da-categoria' })
+  @ApiProperty({ example: 'uuid-da-subcategoria' })
   @IsUUID()
   @IsNotEmpty()
-  category_id: string;
+  subcategory_id: string;
 
   @ApiProperty({ example: 'Pedro', description: 'Pessoa envolvida' })
   @IsEnum(People)
@@ -53,21 +53,18 @@ export class CreateRecordDto {
   @IsOptional()
   @MaxLength(500)
   notes?: string;
-
-  @ApiPropertyOptional({ example: 3, description: 'Numero de parcelas (apenas para credito)' })
-  @IsInt()
-  @Min(1)
-  @Max(24)
-  @IsOptional()
-  installments?: number;
 }
 
 export class UpdateRecordDto extends PartialType(CreateRecordDto) {}
 
 export class RecordFiltersDto {
-  @ApiPropertyOptional({ description: 'Filtrar por categoria' })
+  @ApiPropertyOptional({ description: 'Filtrar por subcategoria' })
   @IsOptional()
-  category_id?: string | null;
+  subcategory_id?: string | null;
+
+  @ApiPropertyOptional({ description: 'Filtrar por categoria (através da subcategoria)' })
+  @IsOptional()
+  category_id?: string;
 
   @ApiPropertyOptional({ description: 'Filtrar por responsável' })
   @IsString()
@@ -89,11 +86,6 @@ export class RecordFiltersDto {
   @IsOptional()
   method?: PaymentMethod;
 
-  @ApiPropertyOptional({ description: 'Filtrar por grupo de parcelas' })
-  @IsUUID()
-  @IsOptional()
-  installment_group_id?: string;
-
   @ApiPropertyOptional({ example: 1, description: 'Número da página (começa em 1)' })
   @IsInt()
   @Min(1)
@@ -110,17 +102,15 @@ export class RecordFiltersDto {
 
 export class RecordResponseDto {
   @ApiProperty() id: string;
-  @ApiProperty() category_id: string;
+  @ApiProperty() subcategory_id: string;
   @ApiProperty() value: number;
   @ApiProperty({ enum: PaymentMethod }) method: PaymentMethod;
   @ApiProperty() date: string;
   @ApiPropertyOptional() notes?: string;
-  @ApiPropertyOptional() installment_group_id?: string;
-  @ApiPropertyOptional() installment_number?: number;
   @ApiProperty() created_at: string;
   @ApiProperty() updated_at: string;
-  @ApiPropertyOptional({ description: 'Dados da categoria (quando expandido)' })
-  categories?: any;
+  @ApiPropertyOptional({ description: 'Dados da subcategoria (quando expandido)' })
+  subcategories?: any;
 }
 
 export class PaginatedRecordsDto {
