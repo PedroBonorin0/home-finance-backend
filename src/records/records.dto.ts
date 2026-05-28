@@ -135,4 +135,6 @@ export class RecordsSummaryDto {
   @ApiProperty() total_outcome: number;
   @ApiProperty() balance: number;
   @ApiProperty() count: number;
+  @ApiProperty() pedro_outcome: number;
+  @ApiProperty() clarissa_outcome: number;
 }

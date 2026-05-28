@@ -24,6 +24,50 @@ export class CsvImportService {
     }
   }
 
+  private async getSubcategoryMap(): Promise<Record<string, string>> {
+    const { data, error } = await this.supabase.db
+      .from('subcategories')
+      .select('*, categories(id, name)');
+
+    if (error) throw new Error(`Erro ao carregar subcategorias: ${error.message}`);
+
+    const map: Record<string, string> = {};
+    for (const sub of data) {
+      const categoryName = (sub.categories as { name: string })?.name;
+      if (categoryName) {
+        map[`${categoryName}.${sub.name}`] = sub.id;
+      }
+    }
+    return map;
+  }
+
+  private findPixSubcategoryId(
+    descricao: string,
+    map: Record<string, string>,
+  ): string | null {
+    if (descricao.startsWith('Transferência recebida')) return map['Geral.Extra'] ?? null;
+    if (descricao === 'Pagamento de boleto efetuado - VALTER LOURO ASSESSORIA E ADMINISTRACAO DE IMOVEIS') return map['Despesas Fixas.Aluguel'] ?? null;
+    if (descricao === 'Aplicação em investimento') return map['Investimento.Selic'] ?? null;
+    if (descricao.startsWith('Compra de FII')) return map['Investimento.FII'] ?? null;
+    if (descricao === 'Crédito em conta') return map['Geral.Rendimento'] ?? null;
+    return null;
+  }
+
+  private findCreditSubcategoryId(
+    title: string,
+    map: Record<string, string>,
+  ): string | null {
+    if (title === 'Multimix') return map['Alimentação.Mercado'] ?? null;
+    if (title === 'Redonda Pizzas') return map['Alimentação.Almoco/Janta'] ?? null;
+    if (title.includes('Uber')) return map['Transporte.Uber/99'] ?? null;
+    if (title.includes('Spotify')) return map['Lazer.Assinatura'] ?? null;
+    if (title.includes('Armazem do Grao')) return map['Alimentação.Mercado'] ?? null;
+    if (title.includes('Petro Frutas')) return map['Alimentação.Mercado'] ?? null;
+    if (title.includes('Wellhub')) return map['Saúde.Academia'] ?? null;
+    if (title.includes('Manual Saude Brasil')) return map['Saúde.Manual - Cabelo'] ?? null;
+    return null;
+  }
+
   private async importCreditCsv(csvContent: string, dto: CsvImportDto) {
     const rows = this.parseCsv(csvContent);
 
@@ -39,6 +83,7 @@ export class CsvImportService {
         .map((r) => Math.abs(parseFloat(r.amount))),
     );
 
+    const subcategoryMap = await this.getSubcategoryMap();
     const created = [];
     const skipped = [];
 
@@ -61,6 +106,8 @@ export class CsvImportService {
         continue;
       }
 
+      const subcategory_id = this.findCreditSubcategoryId(title, subcategoryMap);
+
       const { data, error } = await this.supabase.db
         .from(this.TABLE)
         .insert({
@@ -69,7 +116,7 @@ export class CsvImportService {
           method: PaymentMethod.CREDIT,
           date: row.date,
           notes: title || null,
-          subcategory_id: null,
+          subcategory_id,
         })
         .select()
         .single();
@@ -90,6 +137,7 @@ export class CsvImportService {
 
     this.validateColumns(rows[0], ['Data', 'Valor', 'Descrição']);
 
+    const subcategoryMap = await this.getSubcategoryMap();
     const created = [];
     const skipped = [];
 
@@ -102,6 +150,8 @@ export class CsvImportService {
         continue;
       }
 
+      const subcategory_id = this.findPixSubcategoryId(descricao, subcategoryMap);
+
       const { data, error } = await this.supabase.db
         .from(this.TABLE)
         .insert({
@@ -110,7 +160,7 @@ export class CsvImportService {
           method: PaymentMethod.PIX,
           date: this.parseBrazilianDate(row.Data),
           notes: descricao || null,
-          subcategory_id: null,
+          subcategory_id,
         })
         .select()
         .single();

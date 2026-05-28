@@ -120,7 +120,7 @@ export class RecordsService {
   async getSummary(filters: RecordFiltersDto) {
     let query = this.supabase.db
       .from(this.TABLE)
-      .select('value, subcategories(categories(type))');
+      .select('value, responsible, subcategories(categories(type))');
 
     if (filters.date_from) query = query.gte('date', filters.date_from);
     if (filters.date_to) query = query.lte('date', filters.date_to);
@@ -140,11 +140,19 @@ export class RecordsService {
 
     let total_income = 0;
     let total_outcome = 0;
+    let pedro_outcome = 0;
+    let clarissa_outcome = 0;
 
     for (const record of data ?? []) {
       const type = (record.subcategories as any)?.categories?.type;
-      if (type === 'income') total_income += Number(record.value);
-      else if (type === 'outcome') total_outcome += Number(record.value);
+      const value = Number(record.value);
+      if (type === 'income') {
+        total_income += value;
+      } else if (type === 'outcome') {
+        total_outcome += value;
+        if (record.responsible === 'Pedro') pedro_outcome += value;
+        else if (record.responsible === 'Clarissa') clarissa_outcome += value;
+      }
     }
 
     return {
@@ -152,6 +160,8 @@ export class RecordsService {
       total_outcome,
       balance: total_income - total_outcome,
       count: data?.length ?? 0,
+      pedro_outcome,
+      clarissa_outcome,
     };
   }
 }
